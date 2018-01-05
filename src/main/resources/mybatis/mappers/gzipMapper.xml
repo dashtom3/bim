@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dao.GzipDao">
+	<select id="getFileInfoTotalNumber" resultType="int">
+		select count(*) from file_info
+	</select>
+
+	<select id="getFileInfoList" resultMap="fileInfo">
+		SELECT
+		b.id AS file_id,
+		b.name AS file_name,
+		b.format AS file_format,
+		b.length AS file_length,
+		b.part AS file_part,
+		b.type AS file_type,
+		c.id AS file_property_id,
+		c.name AS file_property_name,
+		c.length AS file_property_length,
+		c.path AS path
+		FROM (SELECT * from file_info limit #{currentNumber},#{numberPerPage}) b
+		LEFT JOIN file_property c ON b.id=c.file_id
+	</select>
+	
+	<resultMap id="fileInfo" type="FileInfo" autoMapping="true">
+		<id property="fileId" column="file_id"/>
+		<result property="fileName" column="file_name"/>
+		<result property="fileFormat" column="file_format"/>
+		<result property="fileLength" column="file_length"/>
+		<result property="filePart" column="file_part"/>
+		<result property="type" column="file_type"/>
+		<collection property="filePropertyList" ofType="FileProperty">
+			<id property="filePropertyId" column="file_property_id"/>
+			<result property="fileName" column="file_property_name"/>
+			<result property="filePath" column="path"/>
+			<result property="fileBytes" column="file_property_length"/>
+		</collection>
+	</resultMap>
+
+	<insert id="addFileInfo" useGeneratedKeys="true" keyProperty="fileId">
+		insert into file_info(`name`,format,length,part,type)
+		VALUES (#{fileName},#{fileFormat},#{fileLength},#{filePart},#{type})
+	</insert>
+
+	<insert id="addFileProperty" >
+		insert into file_property(`name`,path,length,file_id)
+		values 
+		<foreach collection="filePropertyList" separator="," index="index" item="fileProperty">
+			(#{fileProperty.fileName},#{fileProperty.filePath},#{fileProperty.fileBytes},#{autoId})
+		</foreach>
+	</insert>
+</mapper>       
